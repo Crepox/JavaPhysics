@@ -41,8 +41,8 @@ class Window extends JFrame implements KeyListener {
         circleObjs.add(new Circle(100, 100, 10));
         circleObjs.add(new Circle(590, 200, 20));
         circleObjs.add(new Circle(510, 300, 50));
-        wallObjs.add(new Wall(200,100,500,150));
-        wallObjs.add(new Wall(500,150,600,10));
+        wallObjs.add(new Wall(200, 100, 500, 150));
+        wallObjs.add(new Wall(500, 150, 600, 10));
         w.startThread();
     }
 
@@ -109,7 +109,6 @@ class Engine implements Runnable {
         }
         
         for (Wall w : parent.wallObjs) {
-            System.out.println(w.B.y);
             g.drawLine((int)w.A.x, (int)w.A.y, (int)w.B.x, (int)w.B.y);
         }
 
@@ -149,12 +148,14 @@ class Engine implements Runnable {
         if(!collisions.isEmpty()){
             Vector normalAvg = new Vector(0, 0);
             for(Manifold m : collisions){
-                normalAvg = Vector.add(normalAvg, m.normal);
+                normalAvg = Vector.addScaled(normalAvg, m.normal,
+                    Vector.dot(player.velocity, m.normal));
                 player.position = Vector.addScaled(player.position,
                     m.normal, m.length);
             }
+            
             normalAvg = Vector.normal(normalAvg);
-            player.velocity = Vector.addScaled(player.velocity, normalAvg,
+            player.velocity = Vector.addScaled(player.velocity, normalAvg, 
                 Vector.dot(player.velocity, normalAvg) * -2 * 0.85);
         }
     }
@@ -188,54 +189,6 @@ class Engine implements Runnable {
     }
 }
 
-class Circle {
-
-    Vector position;
-    Vector velocity = new Vector(0, 0);
-    double radius;
-
-    public Circle(Vector position, double radius) {
-        this.position = position;
-        this.radius = radius;
-    }
-
-    public Circle(double x, double y, double radius) {
-        this.position = new Vector(x, y);
-        this.radius = radius;
-    }
-
-    public Circle() {
-        position = new Vector(0, 0);
-        radius = 0.0;
-    }
-}
-
-class Wall {
-
-    Vector A, B;
-
-    public Wall(Vector A, Vector B) {
-        this.A = A;
-        this.B = B;
-    }
-
-    public Wall(double x1, double y1, double x2, double y2) {
-        A = new Vector(x1, y1);
-        B = new Vector(x2, y2);
-    }
-}
-
-class Manifold {
-
-    double length;
-    Vector normal;
-
-    public Manifold(double l, Vector n) {
-        length = l;
-        normal = n;
-    }
-}
-
 class CollisionMath {
 
     public final Manifold circleCollision(Circle a, Circle b) {
@@ -252,8 +205,6 @@ class CollisionMath {
                 v = Vector.scale(v, -1);
                 depth = (m * 2) + ((b.radius + a.radius) - m);
             }
-            
-            
             
             return new Manifold(depth, v);
         }
